@@ -5,13 +5,13 @@ RUN sed -i 's|http://deb.debian.org/debian|http://ftp.ru.debian.org/debian|g' /e
 RUN apt-get update \
     && apt-get install -y --fix-missing --no-install-recommends \
     build-essential \
-    libcunit1 libcunit1-doc libcunit1-dev \
     gdb git wget curl cmake \
     openssh-server  \
     libboost-all-dev \
     libblas-dev \
     libstb-dev libcereal-dev \
-    libxml2-dev
+    libxml2-dev \
+    ca-certificates
     
 # вижак
 RUN curl -L -o vscode.deb https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64 \
@@ -34,34 +34,48 @@ WORKDIR /algs
 RUN git config --global http.sslverify false 
 
 # арма
-RUN git clone https://gitlab.com/conradsnicta/armadillo-code.git \
-    && cd armadillo-code \
+# RUN git clone https://gitlab.com/conradsnicta/armadillo-code.git \
+    # && cd armadillo-code \
+    # && mkdir build && cd build \
+    # && cmake .. \
+    # && make -j4 \
+    # && make install \
+    # && ldconfig \
+    # && cd ../..
+
+RUN wget http://sourceforge.net/projects/arma/files/armadillo-12.6.3.tar.xz \
+    && tar -xvf armadillo-12.6.3.tar.xz \
+    && cd armadillo-12.6.3 \
     && mkdir build && cd build \
     && cmake .. \
-    && make -j2 \
+    && make -j4 \
     && make install \
+    && export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH \
+    && cmake -DARMADILLO_INCLUDE_DIR=/usr/local/include \
+             -DARMADILLO_LIBRARY=/usr/local/lib/libarmadillo.so .. \
     && ldconfig \
-    && cd ../..
+    && cd /algs \ 
+    && rm armadillo-12.6.3.tar.xz
 
 # какая то хеддер фигня от млпака
 RUN git clone https://github.com/mlpack/ensmallen.git \
     && cd ensmallen \
     && mkdir build && cd build \
     && cmake .. \
-    && make -j2 \
+    && make -j4 \
     && make install \
     && ldconfig \
-    && cd ../..
+    && cd /algs
 
 # сам млпак
 RUN git clone https://github.com/mlpack/mlpack.git \
     && cd mlpack \
     && mkdir build && cd build \
     && cmake .. \
-    && make -j2 \
+    && make -j4 \
     && make install \
     && ldconfig \
-    && cd ../..
+    && cd /algs
 
 # полетели
 EXPOSE 22 8199
